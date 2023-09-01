@@ -1,0 +1,2318 @@
+#![feature(prelude_import)]
+#![no_main]
+#[prelude_import]
+use std::prelude::rust_2021::*;
+#[macro_use]
+extern crate std;
+extern crate alloc;
+/// Initializes a custom, global allocator for Rust programs compiled to WASM.
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+const _: () = {
+    #[rustc_std_internal_symbol]
+    unsafe fn __rust_alloc(arg0: usize, arg1: usize) -> *mut u8 {
+        ::core::alloc::GlobalAlloc::alloc(
+            &ALLOC,
+            ::core::alloc::Layout::from_size_align_unchecked(arg0, arg1),
+        ) as *mut u8
+    }
+    #[rustc_std_internal_symbol]
+    unsafe fn __rust_dealloc(arg0: *mut u8, arg1: usize, arg2: usize) -> () {
+        ::core::alloc::GlobalAlloc::dealloc(
+            &ALLOC,
+            arg0 as *mut u8,
+            ::core::alloc::Layout::from_size_align_unchecked(arg1, arg2),
+        )
+    }
+    #[rustc_std_internal_symbol]
+    unsafe fn __rust_realloc(
+        arg0: *mut u8,
+        arg1: usize,
+        arg2: usize,
+        arg3: usize,
+    ) -> *mut u8 {
+        ::core::alloc::GlobalAlloc::realloc(
+            &ALLOC,
+            arg0 as *mut u8,
+            ::core::alloc::Layout::from_size_align_unchecked(arg1, arg2),
+            arg3,
+        ) as *mut u8
+    }
+    #[rustc_std_internal_symbol]
+    unsafe fn __rust_alloc_zeroed(arg0: usize, arg1: usize) -> *mut u8 {
+        ::core::alloc::GlobalAlloc::alloc_zeroed(
+            &ALLOC,
+            ::core::alloc::Layout::from_size_align_unchecked(arg0, arg1),
+        ) as *mut u8
+    }
+};
+mod erc20 {
+    use core::marker::PhantomData;
+    /// Import the Stylus SDK along with alloy primitive types for use in our program.
+    use stylus_sdk::{
+        alloy_primitives::{U256, Address, B256, U160},
+        prelude::*, alloy_sol_types::sol, evm, block, crypto, msg, contract,
+    };
+    #[allow(non_camel_case_types, non_snake_case, clippy::style)]
+    pub struct Transfer {
+        pub from: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+        pub to: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+        pub value: <::alloy_sol_types::sol_data::Uint<
+            256,
+        > as ::alloy_sol_types::SolType>::RustType,
+    }
+    #[allow(non_camel_case_types, non_snake_case, clippy::style)]
+    const _: () = {
+        impl ::alloy_sol_types::SolEvent for Transfer {
+            type DataTuple<'a> = (::alloy_sol_types::sol_data::Uint<256>,);
+            type DataToken<'a> = <Self::DataTuple<
+                'a,
+            > as ::alloy_sol_types::SolType>::TokenType<'a>;
+            type TopicList = (
+                ::alloy_sol_types::sol_data::FixedBytes<32>,
+                ::alloy_sol_types::sol_data::Address,
+                ::alloy_sol_types::sol_data::Address,
+            );
+            const SIGNATURE: &'static str = "Transfer(address,address,uint256)";
+            const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+                221u8,
+                242u8,
+                82u8,
+                173u8,
+                27u8,
+                226u8,
+                200u8,
+                155u8,
+                105u8,
+                194u8,
+                176u8,
+                104u8,
+                252u8,
+                55u8,
+                141u8,
+                170u8,
+                149u8,
+                43u8,
+                167u8,
+                241u8,
+                99u8,
+                196u8,
+                161u8,
+                22u8,
+                40u8,
+                245u8,
+                90u8,
+                77u8,
+                245u8,
+                35u8,
+                179u8,
+                239u8,
+            ]);
+            const ANONYMOUS: bool = false;
+            #[allow(unused_variables)]
+            #[inline]
+            fn new(
+                topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+                data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+            ) -> Self {
+                Self {
+                    from: topics.1,
+                    to: topics.2,
+                    value: data.0,
+                }
+            }
+            #[inline]
+            fn tokenize_body(&self) -> Self::DataToken<'_> {
+                (
+                    <::alloy_sol_types::sol_data::Uint<
+                        256,
+                    > as ::alloy_sol_types::SolType>::tokenize(&self.value),
+                )
+            }
+            #[inline]
+            fn topics(
+                &self,
+            ) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+                (Self::SIGNATURE_HASH.into(), self.from.clone(), self.to.clone())
+            }
+            #[inline]
+            fn encode_topics_raw(
+                &self,
+                out: &mut [::alloy_sol_types::token::WordToken],
+            ) -> ::alloy_sol_types::Result<()> {
+                if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                    return Err(::alloy_sol_types::Error::Overrun);
+                }
+                out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+                out[1usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                    &self.from,
+                );
+                out[2usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                    &self.to,
+                );
+                Ok(())
+            }
+        }
+    };
+    #[allow(non_camel_case_types, non_snake_case, clippy::style)]
+    pub struct Approval {
+        pub owner: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+        pub spender: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+        pub value: <::alloy_sol_types::sol_data::Uint<
+            256,
+        > as ::alloy_sol_types::SolType>::RustType,
+    }
+    #[allow(non_camel_case_types, non_snake_case, clippy::style)]
+    const _: () = {
+        impl ::alloy_sol_types::SolEvent for Approval {
+            type DataTuple<'a> = (::alloy_sol_types::sol_data::Uint<256>,);
+            type DataToken<'a> = <Self::DataTuple<
+                'a,
+            > as ::alloy_sol_types::SolType>::TokenType<'a>;
+            type TopicList = (
+                ::alloy_sol_types::sol_data::FixedBytes<32>,
+                ::alloy_sol_types::sol_data::Address,
+                ::alloy_sol_types::sol_data::Address,
+            );
+            const SIGNATURE: &'static str = "Approval(address,address,uint256)";
+            const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+                140u8,
+                91u8,
+                225u8,
+                229u8,
+                235u8,
+                236u8,
+                125u8,
+                91u8,
+                209u8,
+                79u8,
+                113u8,
+                66u8,
+                125u8,
+                30u8,
+                132u8,
+                243u8,
+                221u8,
+                3u8,
+                20u8,
+                192u8,
+                247u8,
+                178u8,
+                41u8,
+                30u8,
+                91u8,
+                32u8,
+                10u8,
+                200u8,
+                199u8,
+                195u8,
+                185u8,
+                37u8,
+            ]);
+            const ANONYMOUS: bool = false;
+            #[allow(unused_variables)]
+            #[inline]
+            fn new(
+                topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+                data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+            ) -> Self {
+                Self {
+                    owner: topics.1,
+                    spender: topics.2,
+                    value: data.0,
+                }
+            }
+            #[inline]
+            fn tokenize_body(&self) -> Self::DataToken<'_> {
+                (
+                    <::alloy_sol_types::sol_data::Uint<
+                        256,
+                    > as ::alloy_sol_types::SolType>::tokenize(&self.value),
+                )
+            }
+            #[inline]
+            fn topics(
+                &self,
+            ) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+                (Self::SIGNATURE_HASH.into(), self.owner.clone(), self.spender.clone())
+            }
+            #[inline]
+            fn encode_topics_raw(
+                &self,
+                out: &mut [::alloy_sol_types::token::WordToken],
+            ) -> ::alloy_sol_types::Result<()> {
+                if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                    return Err(::alloy_sol_types::Error::Overrun);
+                }
+                out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+                out[1usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                    &self.owner,
+                );
+                out[2usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                    &self.spender,
+                );
+                Ok(())
+            }
+        }
+    };
+    pub trait UniswapV2ERC20Params {}
+    pub struct UniswapV2ERC20<T> {
+        pub totalSupply: stylus_sdk::storage::StorageUint<256, 4>,
+        pub balances: stylus_sdk::storage::StorageMap<
+            stylus_sdk::alloy_primitives::Address,
+            stylus_sdk::storage::StorageUint<256, 4>,
+        >,
+        pub allowances: stylus_sdk::storage::StorageMap<
+            stylus_sdk::alloy_primitives::Address,
+            stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageUint<256, 4>,
+            >,
+        >,
+        pub nonces: stylus_sdk::storage::StorageMap<
+            stylus_sdk::alloy_primitives::Address,
+            stylus_sdk::storage::StorageUint<256, 4>,
+        >,
+        pub phantom: PhantomData<T>,
+    }
+    impl<T> UniswapV2ERC20<T> {
+        const fn required_slots() -> usize {
+            use stylus_sdk::storage;
+            let mut total: usize = 0;
+            let mut space: usize = 32;
+            let bytes = <stylus_sdk::storage::StorageUint<
+                256,
+                4,
+            > as storage::StorageType>::SLOT_BYTES;
+            let words = <stylus_sdk::storage::StorageUint<
+                256,
+                4,
+            > as storage::StorageType>::REQUIRED_SLOTS;
+            if words > 0 {
+                total += words;
+                space = 32;
+            } else {
+                if space < bytes {
+                    space = 32;
+                    total += 1;
+                }
+                space -= bytes;
+            }
+            let bytes = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageUint<256, 4>,
+            > as storage::StorageType>::SLOT_BYTES;
+            let words = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageUint<256, 4>,
+            > as storage::StorageType>::REQUIRED_SLOTS;
+            if words > 0 {
+                total += words;
+                space = 32;
+            } else {
+                if space < bytes {
+                    space = 32;
+                    total += 1;
+                }
+                space -= bytes;
+            }
+            let bytes = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageMap<
+                    stylus_sdk::alloy_primitives::Address,
+                    stylus_sdk::storage::StorageUint<256, 4>,
+                >,
+            > as storage::StorageType>::SLOT_BYTES;
+            let words = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageMap<
+                    stylus_sdk::alloy_primitives::Address,
+                    stylus_sdk::storage::StorageUint<256, 4>,
+                >,
+            > as storage::StorageType>::REQUIRED_SLOTS;
+            if words > 0 {
+                total += words;
+                space = 32;
+            } else {
+                if space < bytes {
+                    space = 32;
+                    total += 1;
+                }
+                space -= bytes;
+            }
+            let bytes = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageUint<256, 4>,
+            > as storage::StorageType>::SLOT_BYTES;
+            let words = <stylus_sdk::storage::StorageMap<
+                stylus_sdk::alloy_primitives::Address,
+                stylus_sdk::storage::StorageUint<256, 4>,
+            > as storage::StorageType>::REQUIRED_SLOTS;
+            if words > 0 {
+                total += words;
+                space = 32;
+            } else {
+                if space < bytes {
+                    space = 32;
+                    total += 1;
+                }
+                space -= bytes;
+            }
+            let bytes = <PhantomData<T> as storage::StorageType>::SLOT_BYTES;
+            let words = <PhantomData<T> as storage::StorageType>::REQUIRED_SLOTS;
+            if words > 0 {
+                total += words;
+                space = 32;
+            } else {
+                if space < bytes {
+                    space = 32;
+                    total += 1;
+                }
+                space -= bytes;
+            }
+            if space != 32 || total == 0 {
+                total += 1;
+            }
+            total
+        }
+    }
+    impl<T> stylus_sdk::storage::StorageType for UniswapV2ERC20<T> {
+        type Wraps<'a> = stylus_sdk::storage::StorageGuard<'a, Self> where Self: 'a;
+        type WrapsMut<'a> = stylus_sdk::storage::StorageGuardMut<'a, Self>
+        where
+            Self: 'a;
+        const SLOT_BYTES: usize = 32;
+        const REQUIRED_SLOTS: usize = Self::required_slots();
+        unsafe fn new(mut root: stylus_sdk::alloy_primitives::U256, offset: u8) -> Self {
+            use stylus_sdk::{storage, alloy_primitives};
+            if true {
+                if !(offset == 0) {
+                    ::core::panicking::panic("assertion failed: offset == 0")
+                }
+            }
+            let mut space: usize = 32;
+            let mut slot: usize = 0;
+            let accessor = Self {
+                totalSupply: {
+                    let bytes = <stylus_sdk::storage::StorageUint<
+                        256,
+                        4,
+                    > as storage::StorageType>::SLOT_BYTES;
+                    let words = <stylus_sdk::storage::StorageUint<
+                        256,
+                        4,
+                    > as storage::StorageType>::REQUIRED_SLOTS;
+                    if space < bytes {
+                        space = 32;
+                        slot += 1;
+                    }
+                    space -= bytes;
+                    let root = root + alloy_primitives::U256::from(slot);
+                    let field = <stylus_sdk::storage::StorageUint<
+                        256,
+                        4,
+                    > as storage::StorageType>::new(root, space as u8);
+                    if words > 0 {
+                        slot += words;
+                        space = 32;
+                    }
+                    field
+                },
+                balances: {
+                    let bytes = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::SLOT_BYTES;
+                    let words = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::REQUIRED_SLOTS;
+                    if space < bytes {
+                        space = 32;
+                        slot += 1;
+                    }
+                    space -= bytes;
+                    let root = root + alloy_primitives::U256::from(slot);
+                    let field = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::new(root, space as u8);
+                    if words > 0 {
+                        slot += words;
+                        space = 32;
+                    }
+                    field
+                },
+                allowances: {
+                    let bytes = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageMap<
+                            stylus_sdk::alloy_primitives::Address,
+                            stylus_sdk::storage::StorageUint<256, 4>,
+                        >,
+                    > as storage::StorageType>::SLOT_BYTES;
+                    let words = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageMap<
+                            stylus_sdk::alloy_primitives::Address,
+                            stylus_sdk::storage::StorageUint<256, 4>,
+                        >,
+                    > as storage::StorageType>::REQUIRED_SLOTS;
+                    if space < bytes {
+                        space = 32;
+                        slot += 1;
+                    }
+                    space -= bytes;
+                    let root = root + alloy_primitives::U256::from(slot);
+                    let field = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageMap<
+                            stylus_sdk::alloy_primitives::Address,
+                            stylus_sdk::storage::StorageUint<256, 4>,
+                        >,
+                    > as storage::StorageType>::new(root, space as u8);
+                    if words > 0 {
+                        slot += words;
+                        space = 32;
+                    }
+                    field
+                },
+                nonces: {
+                    let bytes = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::SLOT_BYTES;
+                    let words = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::REQUIRED_SLOTS;
+                    if space < bytes {
+                        space = 32;
+                        slot += 1;
+                    }
+                    space -= bytes;
+                    let root = root + alloy_primitives::U256::from(slot);
+                    let field = <stylus_sdk::storage::StorageMap<
+                        stylus_sdk::alloy_primitives::Address,
+                        stylus_sdk::storage::StorageUint<256, 4>,
+                    > as storage::StorageType>::new(root, space as u8);
+                    if words > 0 {
+                        slot += words;
+                        space = 32;
+                    }
+                    field
+                },
+                phantom: {
+                    let bytes = <PhantomData<T> as storage::StorageType>::SLOT_BYTES;
+                    let words = <PhantomData<T> as storage::StorageType>::REQUIRED_SLOTS;
+                    if space < bytes {
+                        space = 32;
+                        slot += 1;
+                    }
+                    space -= bytes;
+                    let root = root + alloy_primitives::U256::from(slot);
+                    let field = <PhantomData<
+                        T,
+                    > as storage::StorageType>::new(root, space as u8);
+                    if words > 0 {
+                        slot += words;
+                        space = 32;
+                    }
+                    field
+                },
+            };
+            accessor
+        }
+        fn load<'s>(self) -> Self::Wraps<'s> {
+            stylus_sdk::storage::StorageGuard::new(self)
+        }
+        fn load_mut<'s>(self) -> Self::WrapsMut<'s> {
+            stylus_sdk::storage::StorageGuardMut::new(self)
+        }
+    }
+    impl<T: UniswapV2ERC20Params> UniswapV2ERC20<T> {
+        pub fn name(&self) -> Result<String, Vec<u8>> {
+            Ok("Uniswap V2".to_string())
+        }
+        pub fn symbol(&self) -> Result<String, Vec<u8>> {
+            Ok("UNI-V2".to_string())
+        }
+        pub fn decimals(&self) -> Result<u8, Vec<u8>> {
+            Ok(18)
+        }
+        pub fn totalSupply(&self) -> Result<U256, Vec<u8>> {
+            Ok(self.totalSupply.get())
+        }
+        pub fn balanceOf(&self, address: Address) -> Result<U256, Vec<u8>> {
+            Ok(self.balances.get(address))
+        }
+        pub fn allowance(
+            &self,
+            owner: Address,
+            spender: Address,
+        ) -> Result<U256, Vec<u8>> {
+            Ok(self.allowances.getter(owner).get(spender))
+        }
+        pub fn DOMAIN_SEPARATOR(&self) -> Result<Vec<u8>, Vec<u8>> {
+            let domain_hash = crypto::keccak(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                    .as_bytes(),
+            );
+            let name = crypto::keccak(self.name()?.as_bytes());
+            let version = crypto::keccak("1".as_bytes());
+            let chain_id = B256::from(U256::from(block::chainid()));
+            let address: U160 = contract::address().into();
+            let address = B256::from(address.to_be_bytes());
+            Ok(
+                crypto::keccak(
+                        &[domain_hash.0, name.0, version.0, chain_id.0, address.0]
+                            .concat(),
+                    )
+                    .to_vec(),
+            )
+        }
+        pub fn PERMIT_TYPEHASH(&self) -> Result<Vec<u8>, Vec<u8>> {
+            Ok(
+                crypto::keccak(
+                        "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+                            .as_bytes(),
+                    )
+                    .to_vec(),
+            )
+        }
+        pub fn approve(
+            &mut self,
+            spender: Address,
+            value: U256,
+        ) -> Result<bool, Vec<u8>> {
+            self._approve(msg::sender(), spender, value);
+            Ok(true)
+        }
+        pub fn transfer(&mut self, to: Address, value: U256) -> Result<bool, Vec<u8>> {
+            self._transfer(msg::sender(), to, value)?;
+            Ok(true)
+        }
+        pub fn transferFrom(
+            &mut self,
+            from: Address,
+            to: Address,
+            value: U256,
+        ) -> Result<bool, Vec<u8>> {
+            let mut from_allowance = self.allowances.setter(from);
+            let mut allowance = from_allowance.setter(msg::sender());
+            let old_allowance = allowance.get();
+            if old_allowance < value {
+                return Err("Insufficient allowance".to_string().into_bytes());
+            }
+            allowance.set(old_allowance - value);
+            self._transfer(from, to, value)?;
+            Ok(true)
+        }
+        pub fn permit(
+            &mut self,
+            owner: Address,
+            spender: Address,
+            value: U256,
+            deadline: U256,
+            v: u8,
+            r: Vec<u8>,
+            s: Vec<u8>,
+        ) -> Result<bool, Vec<u8>> {
+            Err("No ecrecover in stylus yet".to_string().into_bytes())
+        }
+    }
+    impl<S, T: UniswapV2ERC20Params> stylus_sdk::abi::Router<S> for UniswapV2ERC20<T>
+    where
+        S: stylus_sdk::storage::TopLevelStorage + core::borrow::BorrowMut<Self>,
+    {
+        type Storage = Self;
+        #[inline(always)]
+        fn route(
+            storage: &mut S,
+            selector: u32,
+            input: &[u8],
+        ) -> Option<stylus_sdk::ArbResult> {
+            use stylus_sdk::{function_selector, alloy_sol_types::SolType};
+            use stylus_sdk::abi::{internal, AbiType, Router};
+            use alloc::vec;
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_name: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("name".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_symbol: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("symbol".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_decimals: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("decimals".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_totalSupply: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("totalSupply".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_balanceOf: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("balanceOf".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_allowance: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("allowance".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_DOMAIN_SEPARATOR: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("domainSeparator".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_PERMIT_TYPEHASH: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("permitTypehash".as_bytes())
+                    .update(b"()")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_approve: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("approve".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<U256 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_transfer: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("transfer".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<U256 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_transferFrom: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("transferFrom".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<U256 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            #[allow(non_upper_case_globals)]
+            const SELECTOR_permit: u32 = u32::from_be_bytes({
+                const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                    .update("permit".as_bytes())
+                    .update(b"(")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<U256 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<U256 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<u8 as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<Vec<u8> as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b",")
+                    .update(<Vec<u8> as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                    .update(b")")
+                    .finalize();
+                ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+            });
+            match selector {
+                #[allow(non_upper_case_globals)]
+                SELECTOR_name => {
+                    if let Err(err) = internal::deny_value("name") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::name(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_symbol => {
+                    if let Err(err) = internal::deny_value("symbol") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::symbol(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_decimals => {
+                    if let Err(err) = internal::deny_value("decimals") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::decimals(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_totalSupply => {
+                    if let Err(err) = internal::deny_value("totalSupply") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::totalSupply(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_balanceOf => {
+                    if let Err(err) = internal::deny_value("balanceOf") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::balanceOf(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_allowance => {
+                    if let Err(err) = internal::deny_value("allowance") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                        Address,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::allowance(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                        args.1,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_DOMAIN_SEPARATOR => {
+                    if let Err(err) = internal::deny_value("domainSeparator") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::DOMAIN_SEPARATOR(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_PERMIT_TYPEHASH => {
+                    if let Err(err) = internal::deny_value("permitTypehash") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<() as AbiType>::SolType as SolType>::decode(
+                        input,
+                        true,
+                    ) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::PERMIT_TYPEHASH(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_approve => {
+                    if let Err(err) = internal::deny_value("approve") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                        U256,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::approve(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                        args.1,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_transfer => {
+                    if let Err(err) = internal::deny_value("transfer") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                        U256,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::transfer(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                        args.1,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_transferFrom => {
+                    if let Err(err) = internal::deny_value("transferFrom") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                        Address,
+                        U256,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::transferFrom(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                        args.1,
+                        args.2,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                #[allow(non_upper_case_globals)]
+                SELECTOR_permit => {
+                    if let Err(err) = internal::deny_value("permit") {
+                        return Some(Err(err));
+                    }
+                    let args = match <<(
+                        Address,
+                        Address,
+                        U256,
+                        U256,
+                        u8,
+                        Vec<u8>,
+                        Vec<u8>,
+                    ) as AbiType>::SolType as SolType>::decode(input, true) {
+                        Ok(args) => args,
+                        Err(err) => {
+                            internal::failed_to_decode_arguments(err);
+                            return Some(Err(::alloc::vec::Vec::new()));
+                        }
+                    };
+                    let result = Self::permit(
+                        core::borrow::BorrowMut::borrow_mut(storage),
+                        args.0,
+                        args.1,
+                        args.2,
+                        args.3,
+                        args.4,
+                        args.5,
+                        args.6,
+                    );
+                    match result {
+                        Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                        Err(err) => Some(Err(err.into())),
+                    }
+                }
+                _ => None,
+            }
+        }
+    }
+    impl<T: UniswapV2ERC20Params> UniswapV2ERC20<T> {
+        pub fn _mint(&mut self, to: Address, value: U256) {
+            let mut balance = self.balances.setter(to);
+            let new_balance = balance.get() + value;
+            balance.set(new_balance);
+            self.totalSupply.set(self.totalSupply.get() + value);
+            evm::log(Transfer {
+                from: Address::ZERO,
+                to,
+                value,
+            });
+        }
+        pub fn _burn(&mut self, from: Address, value: U256) {
+            let mut balance = self.balances.setter(from);
+            let new_balance = balance.get() - value;
+            balance.set(new_balance);
+            self.totalSupply.set(self.totalSupply.get() - value);
+            evm::log(Transfer {
+                from,
+                to: Address::ZERO,
+                value,
+            });
+        }
+        pub fn _approve(&mut self, owner: Address, spender: Address, value: U256) {
+            let mut allowance = self.allowances.setter(owner);
+            allowance.setter(spender).set(value);
+            evm::log(Approval { owner, spender, value });
+        }
+        pub fn _transfer(
+            &mut self,
+            from: Address,
+            to: Address,
+            value: U256,
+        ) -> Result<(), Vec<u8>> {
+            let mut from_balance = self.balances.setter(from);
+            let old_from_balance = from_balance.get();
+            if old_from_balance < value {
+                return Err("Insufficient balance".to_string().into_bytes());
+            }
+            from_balance.set(old_from_balance - value);
+            let mut to_balance = self.balances.setter(to);
+            let new_to_balance = to_balance.get() + value;
+            to_balance.set(new_to_balance);
+            evm::log(Transfer { from, to, value });
+            Ok(())
+        }
+    }
+}
+use std::ops::Add;
+use crate::erc20::{UniswapV2ERC20, UniswapV2ERC20Params};
+use alloy_primitives::{U32, Uint};
+use alloy_sol_types::sol_data::Bool;
+/// Import the Stylus SDK along with alloy primitive types for use in our program.
+use stylus_sdk::{
+    alloy_primitives::{U256, Address, B256, U160},
+    prelude::*, alloy_sol_types::sol, evm, block, crypto, msg, contract, call,
+};
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+pub struct Mint {
+    pub sender: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+    pub amount0: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub amount1: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+}
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+const _: () = {
+    impl ::alloy_sol_types::SolEvent for Mint {
+        type DataTuple<'a> = (
+            ::alloy_sol_types::sol_data::Uint<256>,
+            ::alloy_sol_types::sol_data::Uint<256>,
+        );
+        type DataToken<'a> = <Self::DataTuple<
+            'a,
+        > as ::alloy_sol_types::SolType>::TokenType<'a>;
+        type TopicList = (
+            ::alloy_sol_types::sol_data::FixedBytes<32>,
+            ::alloy_sol_types::sol_data::Address,
+        );
+        const SIGNATURE: &'static str = "Mint(address,uint256,uint256)";
+        const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+            76u8,
+            32u8,
+            155u8,
+            95u8,
+            200u8,
+            173u8,
+            80u8,
+            117u8,
+            143u8,
+            19u8,
+            226u8,
+            225u8,
+            8u8,
+            139u8,
+            165u8,
+            106u8,
+            86u8,
+            13u8,
+            255u8,
+            105u8,
+            10u8,
+            28u8,
+            111u8,
+            239u8,
+            38u8,
+            57u8,
+            79u8,
+            76u8,
+            3u8,
+            130u8,
+            28u8,
+            79u8,
+        ]);
+        const ANONYMOUS: bool = false;
+        #[allow(unused_variables)]
+        #[inline]
+        fn new(
+            topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+            data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+        ) -> Self {
+            Self {
+                sender: topics.1,
+                amount0: data.0,
+                amount1: data.1,
+            }
+        }
+        #[inline]
+        fn tokenize_body(&self) -> Self::DataToken<'_> {
+            (
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount0),
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount1),
+            )
+        }
+        #[inline]
+        fn topics(&self) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+            (Self::SIGNATURE_HASH.into(), self.sender.clone())
+        }
+        #[inline]
+        fn encode_topics_raw(
+            &self,
+            out: &mut [::alloy_sol_types::token::WordToken],
+        ) -> ::alloy_sol_types::Result<()> {
+            if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                return Err(::alloy_sol_types::Error::Overrun);
+            }
+            out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+            out[1usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                &self.sender,
+            );
+            Ok(())
+        }
+    }
+};
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+pub struct Burn {
+    pub sender: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+    pub amount0: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub amount1: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub to: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+}
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+const _: () = {
+    impl ::alloy_sol_types::SolEvent for Burn {
+        type DataTuple<'a> = (
+            ::alloy_sol_types::sol_data::Uint<256>,
+            ::alloy_sol_types::sol_data::Uint<256>,
+        );
+        type DataToken<'a> = <Self::DataTuple<
+            'a,
+        > as ::alloy_sol_types::SolType>::TokenType<'a>;
+        type TopicList = (
+            ::alloy_sol_types::sol_data::FixedBytes<32>,
+            ::alloy_sol_types::sol_data::Address,
+            ::alloy_sol_types::sol_data::Address,
+        );
+        const SIGNATURE: &'static str = "Burn(address,uint256,uint256,address)";
+        const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+            220u8,
+            205u8,
+            65u8,
+            47u8,
+            11u8,
+            18u8,
+            82u8,
+            129u8,
+            156u8,
+            177u8,
+            253u8,
+            51u8,
+            11u8,
+            147u8,
+            34u8,
+            76u8,
+            164u8,
+            38u8,
+            18u8,
+            137u8,
+            43u8,
+            179u8,
+            244u8,
+            247u8,
+            137u8,
+            151u8,
+            110u8,
+            109u8,
+            129u8,
+            147u8,
+            100u8,
+            150u8,
+        ]);
+        const ANONYMOUS: bool = false;
+        #[allow(unused_variables)]
+        #[inline]
+        fn new(
+            topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+            data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+        ) -> Self {
+            Self {
+                sender: topics.1,
+                amount0: data.0,
+                amount1: data.1,
+                to: topics.2,
+            }
+        }
+        #[inline]
+        fn tokenize_body(&self) -> Self::DataToken<'_> {
+            (
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount0),
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount1),
+            )
+        }
+        #[inline]
+        fn topics(&self) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+            (Self::SIGNATURE_HASH.into(), self.sender.clone(), self.to.clone())
+        }
+        #[inline]
+        fn encode_topics_raw(
+            &self,
+            out: &mut [::alloy_sol_types::token::WordToken],
+        ) -> ::alloy_sol_types::Result<()> {
+            if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                return Err(::alloy_sol_types::Error::Overrun);
+            }
+            out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+            out[1usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                &self.sender,
+            );
+            out[2usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                &self.to,
+            );
+            Ok(())
+        }
+    }
+};
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+pub struct Swap {
+    pub sender: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+    pub amount0In: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub amount1In: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub amount0Out: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub amount1Out: <::alloy_sol_types::sol_data::Uint<
+        256,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub to: <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::SolType>::RustType,
+}
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+const _: () = {
+    impl ::alloy_sol_types::SolEvent for Swap {
+        type DataTuple<'a> = (
+            ::alloy_sol_types::sol_data::Uint<256>,
+            ::alloy_sol_types::sol_data::Uint<256>,
+            ::alloy_sol_types::sol_data::Uint<256>,
+            ::alloy_sol_types::sol_data::Uint<256>,
+        );
+        type DataToken<'a> = <Self::DataTuple<
+            'a,
+        > as ::alloy_sol_types::SolType>::TokenType<'a>;
+        type TopicList = (
+            ::alloy_sol_types::sol_data::FixedBytes<32>,
+            ::alloy_sol_types::sol_data::Address,
+            ::alloy_sol_types::sol_data::Address,
+        );
+        const SIGNATURE: &'static str = "Swap(address,uint256,uint256,uint256,uint256,address)";
+        const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+            215u8,
+            138u8,
+            217u8,
+            95u8,
+            164u8,
+            108u8,
+            153u8,
+            75u8,
+            101u8,
+            81u8,
+            208u8,
+            218u8,
+            133u8,
+            252u8,
+            39u8,
+            95u8,
+            230u8,
+            19u8,
+            206u8,
+            55u8,
+            101u8,
+            127u8,
+            184u8,
+            213u8,
+            227u8,
+            209u8,
+            48u8,
+            132u8,
+            1u8,
+            89u8,
+            216u8,
+            34u8,
+        ]);
+        const ANONYMOUS: bool = false;
+        #[allow(unused_variables)]
+        #[inline]
+        fn new(
+            topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+            data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+        ) -> Self {
+            Self {
+                sender: topics.1,
+                amount0In: data.0,
+                amount1In: data.1,
+                amount0Out: data.2,
+                amount1Out: data.3,
+                to: topics.2,
+            }
+        }
+        #[inline]
+        fn tokenize_body(&self) -> Self::DataToken<'_> {
+            (
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount0In),
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount1In),
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount0Out),
+                <::alloy_sol_types::sol_data::Uint<
+                    256,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.amount1Out),
+            )
+        }
+        #[inline]
+        fn topics(&self) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+            (Self::SIGNATURE_HASH.into(), self.sender.clone(), self.to.clone())
+        }
+        #[inline]
+        fn encode_topics_raw(
+            &self,
+            out: &mut [::alloy_sol_types::token::WordToken],
+        ) -> ::alloy_sol_types::Result<()> {
+            if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                return Err(::alloy_sol_types::Error::Overrun);
+            }
+            out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+            out[1usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                &self.sender,
+            );
+            out[2usize] = <::alloy_sol_types::sol_data::Address as ::alloy_sol_types::EventTopic>::encode_topic(
+                &self.to,
+            );
+            Ok(())
+        }
+    }
+};
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+pub struct Sync {
+    pub reserve0: <::alloy_sol_types::sol_data::Uint<
+        112,
+    > as ::alloy_sol_types::SolType>::RustType,
+    pub reserve1: <::alloy_sol_types::sol_data::Uint<
+        112,
+    > as ::alloy_sol_types::SolType>::RustType,
+}
+#[allow(non_camel_case_types, non_snake_case, clippy::style)]
+const _: () = {
+    impl ::alloy_sol_types::SolEvent for Sync {
+        type DataTuple<'a> = (
+            ::alloy_sol_types::sol_data::Uint<112>,
+            ::alloy_sol_types::sol_data::Uint<112>,
+        );
+        type DataToken<'a> = <Self::DataTuple<
+            'a,
+        > as ::alloy_sol_types::SolType>::TokenType<'a>;
+        type TopicList = (::alloy_sol_types::sol_data::FixedBytes<32>,);
+        const SIGNATURE: &'static str = "Sync(uint112,uint112)";
+        const SIGNATURE_HASH: ::alloy_sol_types::private::B256 = ::alloy_sol_types::private::B256::new([
+            28u8,
+            65u8,
+            30u8,
+            154u8,
+            150u8,
+            224u8,
+            113u8,
+            36u8,
+            28u8,
+            47u8,
+            33u8,
+            247u8,
+            114u8,
+            107u8,
+            23u8,
+            174u8,
+            137u8,
+            227u8,
+            202u8,
+            180u8,
+            199u8,
+            139u8,
+            229u8,
+            14u8,
+            6u8,
+            43u8,
+            3u8,
+            169u8,
+            255u8,
+            251u8,
+            186u8,
+            209u8,
+        ]);
+        const ANONYMOUS: bool = false;
+        #[allow(unused_variables)]
+        #[inline]
+        fn new(
+            topics: <Self::TopicList as ::alloy_sol_types::SolType>::RustType,
+            data: <Self::DataTuple<'_> as ::alloy_sol_types::SolType>::RustType,
+        ) -> Self {
+            Self {
+                reserve0: data.0,
+                reserve1: data.1,
+            }
+        }
+        #[inline]
+        fn tokenize_body(&self) -> Self::DataToken<'_> {
+            (
+                <::alloy_sol_types::sol_data::Uint<
+                    112,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.reserve0),
+                <::alloy_sol_types::sol_data::Uint<
+                    112,
+                > as ::alloy_sol_types::SolType>::tokenize(&self.reserve1),
+            )
+        }
+        #[inline]
+        fn topics(&self) -> <Self::TopicList as ::alloy_sol_types::SolType>::RustType {
+            (Self::SIGNATURE_HASH.into(),)
+        }
+        #[inline]
+        fn encode_topics_raw(
+            &self,
+            out: &mut [::alloy_sol_types::token::WordToken],
+        ) -> ::alloy_sol_types::Result<()> {
+            if out.len() < <Self::TopicList as ::alloy_sol_types::TopicList>::COUNT {
+                return Err(::alloy_sol_types::Error::Overrun);
+            }
+            out[0usize] = ::alloy_sol_types::token::WordToken(Self::SIGNATURE_HASH);
+            Ok(())
+        }
+    }
+};
+pub struct IERC20 {
+    pub address: stylus_sdk::alloy_primitives::Address,
+}
+impl IERC20 {
+    pub fn new(address: stylus_sdk::alloy_primitives::Address) -> Self {
+        Self { address }
+    }
+    pub fn balanceOf(
+        &self,
+        context: impl stylus_sdk::call::StaticCallContext,
+        owner: <stylus_sdk::alloy_sol_types::sol_data::Address as stylus_sdk::alloy_sol_types::SolType>::RustType,
+    ) -> Result<
+        <stylus_sdk::alloy_sol_types::sol_data::Uint<
+            256,
+        > as stylus_sdk::alloy_sol_types::SolType>::RustType,
+        stylus_sdk::call::Error,
+    > {
+        use alloc::vec;
+        let args = <(
+            stylus_sdk::alloy_sol_types::sol_data::Address,
+        ) as stylus_sdk::alloy_sol_types::SolType>::encode(&(owner,));
+        let mut calldata = <[_]>::into_vec(
+            #[rustc_box]
+            ::alloc::boxed::Box::new([112u8, 160u8, 130u8, 49u8]),
+        );
+        calldata.extend(args);
+        let returned = stylus_sdk::call::static_call(context, self.address, &calldata)?;
+        Ok(
+            <(
+                stylus_sdk::alloy_sol_types::sol_data::Uint<256>,
+            ) as stylus_sdk::alloy_sol_types::SolType>::decode(&returned, true)?
+                .0,
+        )
+    }
+}
+impl core::ops::Deref for IERC20 {
+    type Target = stylus_sdk::alloy_primitives::Address;
+    fn deref(&self) -> &Self::Target {
+        &self.address
+    }
+}
+pub struct IERC20SolType;
+impl stylus_sdk::alloy_sol_types::SolType for IERC20SolType {
+    type RustType = IERC20;
+    type TokenType<'a> = <stylus_sdk::alloy_sol_types::sol_data::Address as stylus_sdk::alloy_sol_types::SolType>::TokenType<
+        'a,
+    >;
+    fn sol_type_name() -> alloc::borrow::Cow<'static, str> {
+        <stylus_sdk::alloy_sol_types::sol_data::Address as stylus_sdk::alloy_sol_types::SolType>::sol_type_name()
+    }
+    fn type_check(
+        token: &Self::TokenType<'_>,
+    ) -> stylus_sdk::alloy_sol_types::Result<()> {
+        stylus_sdk::alloy_sol_types::sol_data::Address::type_check(token)
+    }
+    fn detokenize(token: Self::TokenType<'_>) -> Self::RustType {
+        IERC20::new(stylus_sdk::alloy_sol_types::sol_data::Address::detokenize(token))
+    }
+    fn eip712_data_word(rust: &Self::RustType) -> stylus_sdk::alloy_sol_types::Word {
+        stylus_sdk::alloy_sol_types::sol_data::Address::eip712_data_word(&rust.address)
+    }
+    fn encode_packed_to(rust: &Self::RustType, out: &mut alloc::vec::Vec<u8>) {
+        stylus_sdk::alloy_sol_types::sol_data::Address::encode_packed_to(
+            &rust.address,
+            out,
+        )
+    }
+}
+impl stylus_sdk::alloy_sol_types::Encodable<IERC20SolType> for IERC20 {
+    fn to_tokens(
+        &self,
+    ) -> <IERC20SolType as stylus_sdk::alloy_sol_types::SolType>::TokenType<'_> {
+        <stylus_sdk::alloy_primitives::Address as stylus_sdk::alloy_sol_types::Encodable<
+            stylus_sdk::alloy_sol_types::sol_data::Address,
+        >>::to_tokens(&self.address)
+    }
+}
+impl stylus_sdk::abi::AbiType for IERC20 {
+    type SolType = IERC20SolType;
+    const ABI: stylus_sdk::abi::ConstString = <stylus_sdk::alloy_primitives::Address as stylus_sdk::abi::AbiType>::ABI;
+}
+struct UniswapV2PairParams;
+impl UniswapV2ERC20Params for UniswapV2PairParams {}
+const MINIMUM_LIQUIDITY: u64 = 1_000;
+struct UniswapV2Pair {
+    pub factory: stylus_sdk::storage::StorageAddress,
+    pub token0: stylus_sdk::storage::StorageAddress,
+    pub token1: stylus_sdk::storage::StorageAddress,
+    pub reserve0: stylus_sdk::storage::StorageUint<112, 2>,
+    pub reserve1: stylus_sdk::storage::StorageUint<112, 2>,
+    pub blockTimestampLast: stylus_sdk::storage::StorageUint<32, 1>,
+    pub price0CumulativeLast: stylus_sdk::storage::StorageUint<256, 4>,
+    pub price1CumulativeLast: stylus_sdk::storage::StorageUint<256, 4>,
+    pub kLast: stylus_sdk::storage::StorageUint<256, 4>,
+    pub token: UniswapV2ERC20<UniswapV2PairParams>,
+}
+impl UniswapV2Pair {
+    const fn required_slots() -> usize {
+        use stylus_sdk::storage;
+        let mut total: usize = 0;
+        let mut space: usize = 32;
+        let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            112,
+            2,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            112,
+            2,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            112,
+            2,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            112,
+            2,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            32,
+            1,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            32,
+            1,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <stylus_sdk::storage::StorageUint<
+            256,
+            4,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        let bytes = <UniswapV2ERC20<
+            UniswapV2PairParams,
+        > as storage::StorageType>::SLOT_BYTES;
+        let words = <UniswapV2ERC20<
+            UniswapV2PairParams,
+        > as storage::StorageType>::REQUIRED_SLOTS;
+        if words > 0 {
+            total += words;
+            space = 32;
+        } else {
+            if space < bytes {
+                space = 32;
+                total += 1;
+            }
+            space -= bytes;
+        }
+        if space != 32 || total == 0 {
+            total += 1;
+        }
+        total
+    }
+}
+impl stylus_sdk::storage::StorageType for UniswapV2Pair {
+    type Wraps<'a> = stylus_sdk::storage::StorageGuard<'a, Self> where Self: 'a;
+    type WrapsMut<'a> = stylus_sdk::storage::StorageGuardMut<'a, Self> where Self: 'a;
+    const SLOT_BYTES: usize = 32;
+    const REQUIRED_SLOTS: usize = Self::required_slots();
+    unsafe fn new(mut root: stylus_sdk::alloy_primitives::U256, offset: u8) -> Self {
+        use stylus_sdk::{storage, alloy_primitives};
+        if true {
+            if !(offset == 0) {
+                ::core::panicking::panic("assertion failed: offset == 0")
+            }
+        }
+        let mut space: usize = 32;
+        let mut slot: usize = 0;
+        let accessor = Self {
+            factory: {
+                let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageAddress as storage::StorageType>::new(
+                    root,
+                    space as u8,
+                );
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            token0: {
+                let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageAddress as storage::StorageType>::new(
+                    root,
+                    space as u8,
+                );
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            token1: {
+                let bytes = <stylus_sdk::storage::StorageAddress as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageAddress as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageAddress as storage::StorageType>::new(
+                    root,
+                    space as u8,
+                );
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            reserve0: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            reserve1: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    112,
+                    2,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            blockTimestampLast: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    32,
+                    1,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    32,
+                    1,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    32,
+                    1,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            price0CumulativeLast: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            price1CumulativeLast: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            kLast: {
+                let bytes = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <stylus_sdk::storage::StorageUint<
+                    256,
+                    4,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+            token: {
+                let bytes = <UniswapV2ERC20<
+                    UniswapV2PairParams,
+                > as storage::StorageType>::SLOT_BYTES;
+                let words = <UniswapV2ERC20<
+                    UniswapV2PairParams,
+                > as storage::StorageType>::REQUIRED_SLOTS;
+                if space < bytes {
+                    space = 32;
+                    slot += 1;
+                }
+                space -= bytes;
+                let root = root + alloy_primitives::U256::from(slot);
+                let field = <UniswapV2ERC20<
+                    UniswapV2PairParams,
+                > as storage::StorageType>::new(root, space as u8);
+                if words > 0 {
+                    slot += words;
+                    space = 32;
+                }
+                field
+            },
+        };
+        accessor
+    }
+    fn load<'s>(self) -> Self::Wraps<'s> {
+        stylus_sdk::storage::StorageGuard::new(self)
+    }
+    fn load_mut<'s>(self) -> Self::WrapsMut<'s> {
+        stylus_sdk::storage::StorageGuardMut::new(self)
+    }
+}
+impl core::borrow::Borrow<UniswapV2ERC20<UniswapV2PairParams>> for UniswapV2Pair {
+    fn borrow(&self) -> &UniswapV2ERC20<UniswapV2PairParams> {
+        &self.token
+    }
+}
+impl core::borrow::BorrowMut<UniswapV2ERC20<UniswapV2PairParams>> for UniswapV2Pair {
+    fn borrow_mut(&mut self) -> &mut UniswapV2ERC20<UniswapV2PairParams> {
+        &mut self.token
+    }
+}
+unsafe impl stylus_sdk::storage::TopLevelStorage for UniswapV2Pair {}
+fn entrypoint(input: alloc::vec::Vec<u8>) -> stylus_sdk::ArbResult {
+    use stylus_sdk::{
+        abi::Router, alloy_primitives::U256, console, hex, storage::StorageType,
+    };
+    use core::convert::TryInto;
+    use alloc::vec;
+    if input.len() < 4 {
+        {};
+        return Err(::alloc::vec::Vec::new());
+    }
+    let selector = u32::from_be_bytes(TryInto::try_into(&input[..4]).unwrap());
+    let mut storage = unsafe { <UniswapV2Pair as StorageType>::new(U256::ZERO, 0) };
+    match <UniswapV2Pair as Router<_>>::route(&mut storage, selector, &input[4..]) {
+        Some(res) => res,
+        None => {
+            {};
+            Err(::alloc::vec::Vec::new())
+        }
+    }
+}
+#[no_mangle]
+pub unsafe fn mark_used() {
+    stylus_sdk::evm::memory_grow(0);
+    ::core::panicking::panic("explicit panic");
+}
+#[no_mangle]
+pub extern "C" fn user_entrypoint(len: usize) -> usize {
+    if !false && stylus_sdk::msg::reentrant() {
+        return 1;
+    }
+    if false {
+        unsafe { stylus_sdk::call::opt_into_reentrancy() };
+    }
+    let input = stylus_sdk::contract::args(len);
+    let (data, status) = match entrypoint(input) {
+        Ok(data) => (data, 0),
+        Err(data) => (data, 1),
+    };
+    stylus_sdk::storage::StorageCache::flush();
+    stylus_sdk::contract::output(&data);
+    status
+}
+impl UniswapV2Pair {
+    pub fn initialize(
+        &mut self,
+        token0: Address,
+        token1: Address,
+    ) -> Result<(), Vec<u8>> {
+        if self.factory.get() != Address::ZERO {
+            return Err("Already initialized".into());
+        }
+        self.factory.set(msg::sender());
+        self.token0.set(token0);
+        self.token1.set(token1);
+        Ok(())
+    }
+    pub fn mint(&self, to: Address) -> Result<U256, Vec<u8>> {
+        let (_reserve0, _reserve1) = self.getReserves();
+        Ok(())
+    }
+}
+impl<S> stylus_sdk::abi::Router<S> for UniswapV2Pair
+where
+    S: stylus_sdk::storage::TopLevelStorage + core::borrow::BorrowMut<Self>,
+    S: core::borrow::BorrowMut<UniswapV2ERC20<UniswapV2PairParams>>,
+{
+    type Storage = Self;
+    #[inline(always)]
+    fn route(
+        storage: &mut S,
+        selector: u32,
+        input: &[u8],
+    ) -> Option<stylus_sdk::ArbResult> {
+        use stylus_sdk::{function_selector, alloy_sol_types::SolType};
+        use stylus_sdk::abi::{internal, AbiType, Router};
+        use alloc::vec;
+        #[allow(non_upper_case_globals)]
+        const SELECTOR_initialize: u32 = u32::from_be_bytes({
+            const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                .update("initialize".as_bytes())
+                .update(b"(")
+                .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                .update(b",")
+                .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                .update(b")")
+                .finalize();
+            ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+        });
+        #[allow(non_upper_case_globals)]
+        const SELECTOR_mint: u32 = u32::from_be_bytes({
+            const DIGEST: [u8; 32] = ::stylus_sdk::keccak_const::Keccak256::new()
+                .update("mint".as_bytes())
+                .update(b"(")
+                .update(<Address as ::stylus_sdk::abi::AbiType>::ABI.as_bytes())
+                .update(b")")
+                .finalize();
+            ::stylus_sdk::abi::internal::digest_to_selector(DIGEST)
+        });
+        match selector {
+            #[allow(non_upper_case_globals)]
+            SELECTOR_initialize => {
+                if let Err(err) = internal::deny_value("initialize") {
+                    return Some(Err(err));
+                }
+                let args = match <<(
+                    Address,
+                    Address,
+                ) as AbiType>::SolType as SolType>::decode(input, true) {
+                    Ok(args) => args,
+                    Err(err) => {
+                        internal::failed_to_decode_arguments(err);
+                        return Some(Err(::alloc::vec::Vec::new()));
+                    }
+                };
+                let result = Self::initialize(
+                    core::borrow::BorrowMut::borrow_mut(storage),
+                    args.0,
+                    args.1,
+                );
+                match result {
+                    Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                    Err(err) => Some(Err(err.into())),
+                }
+            }
+            #[allow(non_upper_case_globals)]
+            SELECTOR_mint => {
+                if let Err(err) = internal::deny_value("mint") {
+                    return Some(Err(err));
+                }
+                let args = match <<(
+                    Address,
+                ) as AbiType>::SolType as SolType>::decode(input, true) {
+                    Ok(args) => args,
+                    Err(err) => {
+                        internal::failed_to_decode_arguments(err);
+                        return Some(Err(::alloc::vec::Vec::new()));
+                    }
+                };
+                let result = Self::mint(
+                    core::borrow::BorrowMut::borrow_mut(storage),
+                    args.0,
+                );
+                match result {
+                    Ok(result) => Some(Ok(internal::encode_return_type(result))),
+                    Err(err) => Some(Err(err.into())),
+                }
+            }
+            _ => {
+                if let Some(result)
+                    = <UniswapV2ERC20<
+                        UniswapV2PairParams,
+                    > as Router<S>>::route(storage, selector, input) {
+                    return Some(result);
+                }
+                None
+            }
+        }
+    }
+}
+impl UniswapV2Pair {
+    pub fn _update(
+        &mut self,
+        balance0: U256,
+        balance1: U256,
+        reserve0: U256,
+        reserve1: U256,
+    ) {
+        let block_timestamp = U32::from(block::timestamp() % 2e32 as u64);
+        let time_elapsed = block_timestamp - self.blockTimestampLast.get();
+        let Q112 = U256::from(2).pow(U256::from(112));
+        if time_elapsed > U32::ZERO && reserve0 > U256::ZERO && reserve1 > U256::ZERO {
+            let price0intial = self.price0CumulativeLast.get();
+            let price1intial = self.price1CumulativeLast.get();
+            let uqreserve0 = U256::from(self.reserve0.get()) * Q112;
+            let uqreserve1 = U256::from(self.reserve1.get()) * Q112;
+            let add0 = uqreserve1 / reserve0 * U256::from(time_elapsed);
+            let add1 = uqreserve0 / reserve1 * U256::from(time_elapsed);
+            self.price0CumulativeLast.set(price0intial + add0);
+            self.price1CumulativeLast.set(price1intial + add1);
+        }
+        self.blockTimestampLast.set(block_timestamp);
+        self.reserve0.set(Uint::<112, 2>::from(balance0));
+        self.reserve1.set(Uint::<112, 2>::from(balance1));
+    }
+    fn min(&self, x: U256, y: U256) -> U256 {
+        if x < y { x } else { y }
+    }
+    fn sqrt(&self, y: U256) -> U256 {
+        if y > U256::from(3) {
+            let mut z = y;
+            let mut x = y / U256::from(2) + U256::from(1);
+            while x < z {
+                z = x;
+                x = (y / x + x) / U256::from(2);
+            }
+            z
+        } else if y != U256::ZERO {
+            U256::from(1)
+        } else {
+            U256::ZERO
+        }
+    }
+    pub fn getReserves(&self) -> (U256, U256) {
+        (self.reserve0.get(), self.reserve1.get())
+    }
+    pub fn _mintFee(&mut self, reserve0: U256, reserve1: U256) -> Result<bool, Vec<u8>> {
+        let feeOn = false;
+        let kLast = self.kLast.get();
+        if feeOn {
+            if (kLast != U256::ZERO) {
+                let rootK = self.sqrt(reserve0.checked_mul(reserve1));
+                let rootKLast = self.sqrt(kLast);
+                if (rootK > rootKLast) {
+                    let numerator = self.totalSupply.get() * (rootK - rootKLast);
+                    let denominator = rootK * U256::from(5) + rootKLast;
+                    let liquidity = numerator / denominator;
+                    if (liquidity > U256::ZERO) {
+                        self._mint(msg::sender(), liquidity);
+                        return Ok(true);
+                    }
+                }
+            }
+        } else if (kLast != U256::ZERO) {
+            self.kLast.set(U256::ZERO);
+        }
+        Ok(true)
+    }
+}
