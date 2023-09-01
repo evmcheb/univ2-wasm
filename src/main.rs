@@ -294,6 +294,7 @@ impl UniswapV2Pair {
         (U256::from(self.reserve0.get()), U256::from(self.reserve1.get()))
     }
 
+    // Commented out to stay under 128kb uncompressed contract size
     /*
         pub fn _mintFee(&mut self, reserve0: U256, reserve1: U256) -> Result<bool, Vec<u8>> {
             // No fee switch

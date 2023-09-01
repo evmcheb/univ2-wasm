@@ -71,6 +71,7 @@ impl <T: UniswapV2ERC20Params>UniswapV2ERC20<T> {
         ).to_vec())
     }
 
+    // Commented out to stay under 128kb uncompressed contract size
     /*
         pub fn PERMIT_TYPEHASH(&self) -> Result<Vec<u8>, Vec<u8>> {
             Ok(crypto::keccak(
@@ -102,6 +103,7 @@ impl <T: UniswapV2ERC20Params>UniswapV2ERC20<T> {
         Ok(true)
     }
 
+    // Commented out to stay under 128kb uncompressed contract size
     /*
     pub fn permit(
         &mut self,
