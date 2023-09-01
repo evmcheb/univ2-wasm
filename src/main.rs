@@ -177,21 +177,13 @@ impl UniswapV2Pair {
         let token1 = IERC20::new(self.token1.get());
         if amount0_out > U256::ZERO { self._safeTransfer(self.token0.get(), to, amount0_out)?; }
         if amount1_out > U256::ZERO { self._safeTransfer(self.token1.get(), to, amount1_out)?; }
-        if data.len() > 0 {
+        if !data.is_empty() {
             unsafe {RawCall::new().call(to, &data)?};
         }
         let balance0 = token0.balanceOf(&*self, contract::address())?;
         let balance1 = token1.balanceOf(&*self, contract::address())?;
-        let amount0_in = if balance0 > _reserve0 - amount0_out {
-            balance0 - (_reserve0 - amount0_out)
-        } else {
-            U256::ZERO
-        };
-        let amount1_in = if balance1 > _reserve1 - amount1_out {
-            balance1 - (_reserve1 - amount1_out)
-        } else {
-            U256::ZERO
-        };
+        let amount0_in = balance0.saturating_sub(_reserve0.saturating_sub(amount0_out));
+        let amount1_in = balance1.saturating_sub(_reserve1.saturating_sub(amount1_out));
         if amount0_in == U256::ZERO && amount1_in == U256::ZERO {
             return Err("INSUFFICIENT_INPUT_AMOUNT".into());
         }
